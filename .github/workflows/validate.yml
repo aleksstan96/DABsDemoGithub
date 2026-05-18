@@ -1,0 +1,33 @@
+name: Validate bundle (PR)
+
+# Runs on every PR targeting main. Auths to Databricks via GitHub OIDC
+# (workload identity federation) -- no long-lived PAT in repo secrets.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write   # required to mint a GitHub OIDC token
+  contents: read    # required for actions/checkout
+
+jobs:
+  validate:
+    name: bundle validate (prod target)
+    runs-on: ubuntu-latest
+    env:
+      # `github-oidc` tells the Databricks CLI to exchange a GitHub OIDC token
+      # for a Databricks access token via the federation policy on the SP below.
+      DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      BUNDLE_VAR_prod_sp_app_id: ${{ vars.DATABRICKS_CLIENT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@main
+
+      - name: Confirm OIDC auth works
+        run: databricks current-user me
+
+      - name: Validate bundle against prod target
+        run: databricks bundle validate --target prod

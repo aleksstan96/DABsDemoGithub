@@ -1,0 +1,42 @@
+# This is a Databricks asset bundle definition for DABsDemoGithub.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: DABsDemoGithub
+
+# Pull in every resource file under resources/<group>/<name>.yml
+include:
+  - resources/*/*.yml
+
+# Variables let us override the prod service principal application_id from the
+# CLI / GitHub Actions without editing this file. Override with:
+#   databricks bundle deploy --target prod --var="prod_sp_app_id=<uuid>"
+# or set BUNDLE_VAR_prod_sp_app_id in the environment.
+variables:
+  prod_sp_app_id:
+    description: Application ID of the Databricks SP that owns + runs the prod deployment.
+    default: "98567142-f414-459b-b56d-7d5fdb6fa141"
+
+targets:
+  # The 'dev' target, for local development. Default when no --target is passed.
+  # `mode: development` prefixes deployed resources with [dev <your_name>] and
+  # pauses schedules/triggers so multiple developers can coexist safely.
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-984752964297111.11.azuredatabricks.net/
+
+  # The 'prod' target, deployed by GitHub Actions on push to main.
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-984752964297111.11.azuredatabricks.net/
+      # SPs don't have /Users/<sp> dirs, so pin root_path to a user-owned location.
+      root_path: /Users/aleksandra.stanojevic@databricks.com/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      # In prod we run as the SP that GitHub Actions auths as via OIDC federation.
+      service_principal_name: ${var.prod_sp_app_id}
+    permissions:
+      # Keep human admin access on prod resources for inspection/manual reruns.
+      - user_name: aleksandra.stanojevic@databricks.com
+        level: CAN_MANAGE
