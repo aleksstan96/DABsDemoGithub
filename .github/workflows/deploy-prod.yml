@@ -1,6 +1,6 @@
 name: Deploy bundle (prod)
 
-# Push to main -> deploy bundle to the prod target and refresh the DLT pipeline.
+# Push to main -> deploy bundle to the prod target and run the job.
 # Auths via GitHub OIDC federation -- no PATs in repo secrets.
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
   deploy:
     name: bundle deploy
     runs-on: ubuntu-latest
-    environment: prod  # GitHub Environment scopes OIDC subject; matches federation policy
+    environment: prod  # scopes OIDC subject to match the federation policy
     env:
       DATABRICKS_AUTH_TYPE: github-oidc
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
@@ -32,8 +32,8 @@ jobs:
       - name: Deploy bundle
         run: databricks bundle deploy --target prod
 
-  run-pipeline:
-    name: refresh DLT pipeline
+  run-job:
+    name: run DABsDemoGithub_job
     runs-on: ubuntu-latest
     needs: deploy
     environment: prod
@@ -46,4 +46,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: databricks/setup-cli@main
-      - run: databricks bundle run DABsDemoGithub_pipeline --refresh-all --target prod
+      - run: databricks bundle run DABsDemoGithub_job --target prod
