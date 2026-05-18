@@ -24,13 +24,13 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://adb-984752964297111.11.azuredatabricks.net/
+      host: https://adb-7405612459259588.8.azuredatabricks.net/
 
   # The 'prod' target, deployed by GitHub Actions on push to main.
   prod:
     mode: production
     workspace:
-      host: https://adb-984752964297111.11.azuredatabricks.net/
+      host: https://adb-7405612459259588.8.azuredatabricks.net/
       # SPs don't have /Users/<sp> dirs, so pin root_path to a user-owned location.
       root_path: /Users/aleksandra.stanojevic@databricks.com/.bundle/${bundle.name}/${bundle.target}
     run_as:
